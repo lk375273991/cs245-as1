@@ -47,7 +47,7 @@ public class RowTable implements Table {
     @Override
     public int getIntField(int rowId, int colId) {
         // TODO: Implement this!
-        return 0;
+        return this.rows.getInt(ByteFormat.FIELD_LEN * (rowId * numCols + colId));
     }
 
     /**
@@ -56,6 +56,7 @@ public class RowTable implements Table {
     @Override
     public void putIntField(int rowId, int colId, int field) {
         // TODO: Implement this!
+        this.rows.putInt(ByteFormat.FIELD_LEN * (rowId * numCols + colId), field);
     }
 
     /**
@@ -67,7 +68,11 @@ public class RowTable implements Table {
     @Override
     public long columnSum() {
         // TODO: Implement this!
-        return 0;
+        int s = 0;
+        for (int rowId = 0; rowId < numRows; rowId++) {
+            s += getIntField(rowId, 0);
+        }
+        return s;
     }
 
     /**
@@ -80,7 +85,15 @@ public class RowTable implements Table {
     @Override
     public long predicatedColumnSum(int threshold1, int threshold2) {
         // TODO: Implement this!
-        return 0;
+        int s = 0;
+        for (int rowId = 0; rowId < numRows; rowId++) {
+            int col0Value = getIntField(rowId, 0), col1Value = getIntField(rowId, 1),
+                col2Value = getIntField(rowId, 2);
+            if (col1Value > threshold1 && col2Value < threshold2) {
+                s += getIntField(rowId, 0);
+            }
+        }
+        return s;
     }
 
     /**
@@ -92,7 +105,18 @@ public class RowTable implements Table {
     @Override
     public long predicatedAllColumnsSum(int threshold) {
         // TODO: Implement this!
-        return 0;
+        int s = 0;
+        for (int rowId = 0; rowId < numRows; ++rowId) {
+            int col0Value = getIntField(rowId, 0);
+            if (col0Value <= threshold) {
+                continue;
+            }
+            s += col0Value;
+            for (int colId = 1; colId < numCols; ++colId) {
+                s += getIntField(rowId, colId);
+            }
+        }
+        return s;
     }
 
     /**
@@ -104,6 +128,15 @@ public class RowTable implements Table {
     @Override
     public int predicatedUpdate(int threshold) {
         // TODO: Implement this!
-        return 0;
+        int updateCnt = 0;
+        for (int rowId = 0; rowId < numRows; ++rowId) {
+            int col0Value = getIntField(rowId, 0), col1Value = getIntField(rowId, 1),
+                col2Value = getIntField(rowId, 2), col3Value = getIntField(rowId, 3);
+            if (col0Value < threshold) {
+                ++updateCnt;
+                putIntField(rowId, 3, col2Value + col3Value);
+            }
+        }
+        return updateCnt;
     }
 }
